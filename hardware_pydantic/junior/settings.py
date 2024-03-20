@@ -1,26 +1,33 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, ClassVar, Type
 
-from hardware_pydantic.base import Lab, LabObject, Instruction, BaseModel
+from hardware_pydantic.base import Lab, LabObject, Instruction, JuniorOntology
+from py4jps.data_model.base_ontology import BaseClass, BaseOntology
 
 JUNIOR_LAYOUT_SLOT_SIZE_X = 80
 JUNIOR_LAYOUT_SLOT_SIZE_Y = 120
 JUNIOR_LAYOUT_SLOT_SIZE_X_SMALL = 40
 JUNIOR_LAYOUT_SLOT_SIZE_Y_SMALL = 20
-JUNIOR_LAB = Lab()
+JUNIOR_LAB = Lab(example_data_property='this is an example data property.')
 JUNIOR_VIAL_TYPE = Literal["HRV", "MRV", "SV"]
 
 
 class JuniorLabObject(LabObject):
     """Base class for all Junior lab objects."""
     def model_post_init(self, *args) -> None:
+        # NOTE that the super().model_post_init() must be called to finalise the object creation
+        # and have the object registred in the knowledge graph
+        super().model_post_init(*args)
         JUNIOR_LAB.add_object(self)
 
 
 class JuniorInstruction(Instruction):
     """Base class for all Junior instructions."""
     def model_post_init(self, *args) -> None:
+        # NOTE that the super().model_post_init() must be called to finalise the object creation
+        # and have the object registred in the knowledge graph
+        super().model_post_init(*args)
         JUNIOR_LAB.add_instruction(self)
 
     @staticmethod
@@ -30,7 +37,7 @@ class JuniorInstruction(Instruction):
             ins.preceding_instructions.append(ins_list[i-1].identifier)
 
 
-class JuniorLayout(BaseModel):
+class JuniorLayout(BaseClass):
     """A region appears in layout.
 
     Parameters
@@ -43,6 +50,7 @@ class JuniorLayout(BaseModel):
         The y length, Default is JUNIOR_LAYOUT_SLOT_SIZE_Y.
 
     """
+    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
     layout_position: tuple[float, float] | None = None
     layout_x: float = JUNIOR_LAYOUT_SLOT_SIZE_X
     layout_y: float = JUNIOR_LAYOUT_SLOT_SIZE_Y

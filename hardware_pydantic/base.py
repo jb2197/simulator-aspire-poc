@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Type
+from typing import Any, Literal, Type, ClassVar
 
 from N2G import drawio_diagram  # only used for drawing instruction DAG
 from pydantic import BaseModel, Field
+
+from py4jps.data_model.base_ontology import BaseOntology, BaseClass, ObjectProperty, DataProperty
+from py4jps.data_model.base_ontology import as_range_of_data_property, as_range_of_object_property
+
 
 from .utils import str_uuid
 
@@ -11,16 +15,19 @@ DEVICE_ACTION_METHOD_PREFIX = "action__"
 DEVICE_ACTION_METHOD_ACTOR_TYPE = Literal['pre', 'post', 'proj']
 
 
-class Individual(BaseModel):
+class JuniorOntology(BaseOntology):
+    base_url: ClassVar[str] = "https://junior/kg/"
+    namespace: ClassVar[str] = "junior"
+
+
+class Individual(BaseClass):
     """ a thing with an identifier """
+    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
+    instance_iri: str = Field(default=None, alias='identifier')
 
-    identifier: str = Field(default_factory=str_uuid)
-
-    def __hash__(self):
-        return hash(self.identifier)
-
-    def __eq__(self, other: Individual):
-        return self.identifier == other.identifier
+    @property
+    def identifier(self) -> str:
+        return self.instance_iri
 
 
 class LabObject(Individual):
@@ -32,6 +39,8 @@ class LabObject(Individual):
         # TODO can we have a pydantic model history tracker? similar to https://pypi.org/project/pydantic-changedetect/
         # TODO mutable fields vs immutable fields?
     """
+
+    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
 
     @property
     def state(self) -> dict:
@@ -117,7 +126,7 @@ class Device(LabObject):
         assert i.device == self
         return self.act(action_name=i.action_name, action_parameters=i.action_parameters, actor_type=actor_type)
 
-
+from typing import List
 class Instruction(Individual):
     """
     an instruction sent to a device for an action
@@ -138,6 +147,7 @@ class Instruction(Individual):
         - ends when
             - the duration, returned by the action method of the actor, has passed
     """
+    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
     device: Device
     action_parameters: dict = dict()
     action_name: str = "dummy"
@@ -160,9 +170,19 @@ class Instruction(Individual):
         else:
             self.model_dump()
 
+class example_data_property(DataProperty):
+    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
+    range: as_range_of_data_property(str)
 
-class Lab(BaseModel):
-    dict_instruction: dict[str, Instruction] = dict()
+class HasInstruction(ObjectProperty):
+    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
+    range: as_range_of_object_property(Instruction)
+
+from pydantic import create_model
+class Lab(BaseClass):
+    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
+    example_data_property: example_data_property
+    has_instruction: HasInstruction = Field(default_factory=HasInstruction)
     dict_object: dict[str, LabObject | Device] = dict()
 
     def __getitem__(self, identifier: str):
@@ -171,22 +191,22 @@ class Lab(BaseModel):
     def __setitem__(self, key, value):
         raise NotImplementedError
 
+    @property
+    def dict_instruction(self):
+        return {i.identifier: i for i in self.has_instruction.range}
+
     def act_by_instruction(self, i: Instruction, actor_type: DEVICE_ACTION_METHOD_ACTOR_TYPE):
         actor = self.dict_object[i.device.identifier]  # make sure we are working on the same device
         assert isinstance(actor, Device)
         return actor.act_by_instruction(i, actor_type=actor_type)
 
     def add_instruction(self, i: Instruction):
-        assert i.identifier not in self.dict_instruction
-        self.dict_instruction[i.identifier] = i
+        assert i.identifier not in self.has_instruction.range
+        self.has_instruction.range.add(i)
 
     def remove_instruction(self, i: Instruction | str):
-        if isinstance(i, str):
-            assert i in self.dict_instruction
-            self.dict_instruction.pop(i)
-        else:
-            assert i.identifier in self.dict_instruction
-            self.dict_instruction.pop(i.identifier)
+        assert i in self.has_instruction.range
+        self.has_instruction.range.remove(i)
 
     def add_object(self, d: LabObject | Device):
         assert d.identifier not in self.dict_object

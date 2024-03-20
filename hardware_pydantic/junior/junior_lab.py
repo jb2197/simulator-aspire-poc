@@ -2,7 +2,8 @@ from hardware_pydantic.junior.junior_devices import *
 from hardware_pydantic.junior.settings import *
 
 
-class JuniorBenchtop(BaseModel):
+class JuniorBenchtop(BaseClass):
+    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
     SLOT_OFF_1: JuniorSlot
     SLOT_OFF_2: JuniorSlot
     SLOT_OFF_3: JuniorSlot

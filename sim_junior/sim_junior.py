@@ -503,3 +503,12 @@ env = simpy.Environment()
 model = Model(env, JUNIOR_LAB, wdir=os.path.abspath("./"), model_name=f"con-{CONCURRENCY}")
 
 env.run()
+
+JuniorOntology.export_to_owl("junior_lab_tbox.ttl")
+print("TBox exported to junior_lab_tbox.ttl")
+from rdflib import Graph
+g2r = Graph()
+g2a = Graph()
+g2r, g2a = JUNIOR_LAB.collect_diff_to_graph(g2r, g2a, -1)
+g2a.serialize(destination="junior_lab_abox.ttl", format="turtle")
+print("ABox exported to junior_lab_abox.ttl")
