@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Literal, ClassVar, Type
 
 from hardware_pydantic.base import Lab, LabObject, Instruction, JuniorOntology
-from py4jps.data_model.base_ontology import BaseClass, BaseOntology
+from twa.data_model.base_ontology import BaseClass, BaseOntology
 
 JUNIOR_LAYOUT_SLOT_SIZE_X = 80
 JUNIOR_LAYOUT_SLOT_SIZE_Y = 120

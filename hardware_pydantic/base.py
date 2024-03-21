@@ -5,8 +5,8 @@ from typing import Any, Literal, Type, ClassVar
 from N2G import drawio_diagram  # only used for drawing instruction DAG
 from pydantic import BaseModel, Field
 
-from py4jps.data_model.base_ontology import BaseOntology, BaseClass, ObjectProperty, DataProperty
-from py4jps.data_model.base_ontology import as_range_of_data_property, as_range_of_object_property
+from twa.data_model.base_ontology import BaseOntology, BaseClass, ObjectProperty, DataProperty
+from twa.data_model.base_ontology import as_range_of_data_property, as_range_of_object_property
 
 
 from .utils import str_uuid
