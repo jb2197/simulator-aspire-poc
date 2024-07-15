@@ -83,9 +83,13 @@ def get_layout_figure(lab: Lab) -> go.Figure:
 
     for k, v in lab.dict_object.items():
         if isinstance(v, (JuniorSlot, JuniorWashBay, JuniorTipDisposal)):
-            x0, y0 = v.layout.layout_position
-            x1 = x0 + v.layout.layout_x
-            y1 = y0 + v.layout.layout_y
+            layout = v.layout.get_range_assume_one()
+            layout: JuniorLayout
+            layout_x = layout.layout_x.get_range_assume_one()
+            layout_y = layout.layout_y.get_range_assume_one()
+            x0, y0 = layout.layout_position
+            x1 = x0 + layout_x
+            y1 = y0 + layout_y
 
             if isinstance(v, JuniorSlot) and v.slot_content['SLOT'] is not None:
                 fillcolor = "gray"
@@ -100,8 +104,8 @@ def get_layout_figure(lab: Lab) -> go.Figure:
             )
             fig.add_trace(
                 go.Scatter(
-                    x=[x0, x0, x0 + v.layout.layout_x, x0 + v.layout.layout_x],
-                    y=[y0, y0 + v.layout.layout_y, y0 + v.layout.layout_y, y0],
+                    x=[x0, x0, x0 + layout_x, x0 + layout_x],
+                    y=[y0, y0 + layout_y, y0 + layout_y, y0],
                     fill="toself",
                     mode='lines',
                     name='',
@@ -117,7 +121,7 @@ def get_layout_figure(lab: Lab) -> go.Figure:
             else:
                 bgcolor = None
 
-            fig.add_annotation(x=x0 + v.layout.layout_x / 2, y=y0 + v.layout.layout_y / 2,
+            fig.add_annotation(x=x0 + layout_x / 2, y=y0 + layout_y / 2,
                                font={"color": "black"},
                                text=v.identifier,
                                bordercolor=bgcolor,

@@ -90,16 +90,16 @@ def get_ins_lst_dcm_dispense():
 def get_ins_lst_reaction():
     """ capping, stir and let the reactions proceed """
     ins_cap = JuniorInstruction(
-        device=JUNIOR_BENCHTOP.SLOT_2_3_1, action_name="wait",
+        send_to_device=JUNIOR_BENCHTOP.SLOT_2_3_1, action_name="wait",
         action_parameters={"wait_time": 30 * len(SULFONYL_BENCHTOP.REACTOR_VIALS)},
         description="capping reactors"
     )
     ins_stir = JuniorInstruction(
-        device=JUNIOR_BENCHTOP.SLOT_2_3_1, action_name="wait", action_parameters={"wait_time": 300},
+        send_to_device=JUNIOR_BENCHTOP.SLOT_2_3_1, action_name="wait", action_parameters={"wait_time": 300},
         description="wait for 5 min"
     )
     ins_reaction = JuniorInstruction(
-        device=JUNIOR_BENCHTOP.SLOT_2_3_1, action_name="wait", action_parameters={"wait_time": 60 * 120},
+        send_to_device=JUNIOR_BENCHTOP.SLOT_2_3_1, action_name="wait", action_parameters={"wait_time": 60 * 120},
         description="wait for 120 min"
     )
     lst = [ins_cap, ins_stir, ins_reaction]

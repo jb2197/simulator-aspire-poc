@@ -1,11 +1,16 @@
 from __future__ import annotations
 
-from hardware_pydantic.junior.settings import JUNIOR_LAB, JuniorLabObject, JUNIOR_VIAL_TYPE, JuniorLayout
-from hardware_pydantic.lab_objects import ChemicalContainer, LabContainee, LabContainer
+from hardware_pydantic.junior.settings import JUNIOR_LAB, JuniorLabObject, JUNIOR_VIAL_TYPE, JuniorLayout, Layout
+from hardware_pydantic.lab_objects import ChemicalContainer, LabContainee, LabContainer, Can_contain
+from hardware_pydantic.base import JuniorOntology, Material
 
+from twa.data_model.base_ontology import DatatypeProperty, as_range
 
 """"Lab objects for the JUNIOR platform from NCATS."""
 
+class Is_spinning(DatatypeProperty):
+    is_defined_by_ontology = JuniorOntology
+    range: as_range(bool)
 
 class JuniorStirBar(LabContainee, JuniorLabObject):
     """A stir bar that can be placed in a vial.
@@ -18,9 +23,9 @@ class JuniorStirBar(LabContainee, JuniorLabObject):
         Whether the stir bar is spinning. Default is False.
 
     """
-    material: str = "TEFLON"
+    material: Material = Material(range="TEFLON")
 
-    is_spinning: bool = False
+    is_spinning: Is_spinning = Is_spinning(range=False)
 
 
 class JuniorVial(ChemicalContainer, LabContainee, LabContainer, JuniorLabObject):
@@ -35,7 +40,7 @@ class JuniorVial(ChemicalContainer, LabContainee, LabContainer, JuniorLabObject)
 
     """
 
-    can_contain: list[str] = [JuniorStirBar.__name__, ]
+    can_contain: Can_contain = Can_contain(range=[JuniorStirBar.get_rdf_type(), ])
 
     vial_type: JUNIOR_VIAL_TYPE = "HRV"
 
@@ -49,7 +54,7 @@ class JuniorPdpTip(ChemicalContainer, LabContainee, JuniorLabObject):
         The material the tip is made of. Default is "PLASTIC".
 
     """
-    material: str = "PLASTIC"
+    material: Material = Material(range="PLASTIC")
 
 
 class JuniorRack(LabContainer, LabContainee, JuniorLabObject):
@@ -91,18 +96,19 @@ class JuniorRack(LabContainer, LabContainee, JuniorLabObject):
 
         tips = []
         n_created = 0
-        for k in rack.slot_content:
+        for k in range(rack.slot_capacity):
+            idx = str(k+1)
             if tip_id_inherit:
                 v = JuniorPdpTip(
-                    identifier=f"PdpTip-{k} " + rack_id,
+                    identifier=f"{rack_id}/PdpTip-{idx}",
                     contained_by=rack.identifier,
-                    contained_in_slot=k,
+                    contained_in_slot=idx,
                 )
             else:
                 v = JuniorVial(
-                    contained_by=rack.identifier, contained_in_slot=k,
+                    contained_by=rack.identifier, contained_in_slot=idx,
                 )
-            rack.slot_content[k] = v.identifier
+            rack.has_slot_content.range.add(v)
             tips.append(v)
             n_created += 1
             if n_created == n_tips:
@@ -149,17 +155,18 @@ class JuniorRack(LabContainer, LabContainee, JuniorLabObject):
 
         vials = []
         n_created = 0
-        for k in rack.slot_content:
+        for k in range(rack.slot_capacity):
+            idx = str(k+1)
             if vial_id_inherit:
                 v = JuniorVial(
-                    identifier=f"vial-{k} " + rack_id, contained_by=rack.identifier,
-                    contained_in_slot=k, vial_type=vial_type,
+                    identifier=f"{rack_id}/vial-{idx}", contained_by=rack.identifier,
+                    contained_in_slot=idx, vial_type=vial_type,
                 )
             else:
                 v = JuniorVial(
-                    contained_by=rack.identifier, contained_in_slot=k, vial_type=vial_type,
+                    contained_by=rack.identifier, contained_in_slot=idx, vial_type=vial_type,
                 )
-            rack.slot_content[k] = v.identifier
+            rack.has_slot_content.range.add(v)
             vials.append(v)
             n_created += 1
             if n_created == n_vials:
@@ -177,7 +184,7 @@ class JuniorVpg(LabContainee, LabContainer, JuniorLabObject):
 
     """
 
-    can_contain: list[str] = [JuniorRack.__name__, ]
+    can_contain: Can_contain = Can_contain(range=[JuniorRack.get_rdf_type(), ])
 
     @property
     def rack(self) -> JuniorRack | None:
@@ -206,7 +213,7 @@ class JuniorPdp(LabContainee, LabContainer, JuniorLabObject):
         strings containing the name of the positive displacement pipette tip.
     """
 
-    can_contain: list[str] = [JuniorPdpTip.__name__, ]
+    can_contain: Can_contain = Can_contain(range=[JuniorPdpTip.get_rdf_type(), ])
 
     @property
     def tip(self) -> JuniorPdpTip | None:
@@ -224,6 +231,10 @@ class JuniorPdp(LabContainee, LabContainer, JuniorLabObject):
         return JUNIOR_LAB[i]
 
 
+class Powder_param_known(DatatypeProperty):
+    is_defined_by_ontology = JuniorOntology
+    range: as_range(bool)
+
 class JuniorSvt(LabContainee, LabContainer, JuniorLabObject):
     """The SV tool which is the z2 attachment used to hold a SV vial.
 
@@ -237,9 +248,9 @@ class JuniorSvt(LabContainee, LabContainer, JuniorLabObject):
 
     """
 
-    can_contain: list[str] = [JuniorVial.__name__, ]
+    can_contain: Can_contain = Can_contain(range=[JuniorVial.get_rdf_type(), ])
 
-    powder_param_known: bool = False
+    powder_param_known: Powder_param_known = Powder_param_known(range=False)
 
     @property
     def sv_vial(self) -> JuniorVial | None:
@@ -271,8 +282,13 @@ class JuniorWashBay(JuniorLabObject):
         The layout of the wash bay. Default is None.
 
     """
-    layout: JuniorLayout | None = None
+    layout: Layout
 
+
+class Disposal_content(DatatypeProperty):
+    # TODO should be an object property
+    is_defined_by_ontology = JuniorOntology
+    range: as_range(str)
 
 class JuniorTipDisposal(JuniorLabObject):
     """The tip disposal for used PdpTips.
@@ -285,9 +301,9 @@ class JuniorTipDisposal(JuniorLabObject):
         The list of objects that can be disposed of in the tip disposal. Default is an empty list.
 
     """
-    layout: JuniorLayout | None = None
+    layout: Layout
 
-    disposal_content: list[str] = []
+    disposal_content: Disposal_content
 
 
 """python

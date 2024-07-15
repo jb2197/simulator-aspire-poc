@@ -3,10 +3,14 @@ from __future__ import annotations
 from typing import Any, Literal, Type, ClassVar
 
 from N2G import drawio_diagram  # only used for drawing instruction DAG
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from twa.data_model.base_ontology import BaseOntology, BaseClass, ObjectProperty, DataProperty
-from twa.data_model.base_ontology import as_range_of_data_property, as_range_of_object_property
+from twa.data_model.base_ontology import KnowledgeGraph
+from twa.data_model.base_ontology import BaseOntology
+from twa.data_model.base_ontology import BaseClass
+from twa.data_model.base_ontology import ObjectProperty
+from twa.data_model.base_ontology import DatatypeProperty
+from twa.data_model.base_ontology import as_range
 
 
 from .utils import str_uuid
@@ -16,19 +20,24 @@ DEVICE_ACTION_METHOD_ACTOR_TYPE = Literal['pre', 'post', 'proj']
 
 
 class JuniorOntology(BaseOntology):
-    base_url: ClassVar[str] = "https://junior/kg/"
-    namespace: ClassVar[str] = "junior"
+    base_url = "https://junior/kg/"
+    namespace = "junior"
+    owl_versionInfo = "0.0.1"
+    rdfs_comment = 'This is an ontology for the Junior platform from NCATS.'
 
 
 class Individual(BaseClass):
     """ a thing with an identifier """
-    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
+    is_defined_by_ontology = JuniorOntology
     instance_iri: str = Field(default=None, alias='identifier')
 
     @property
     def identifier(self) -> str:
         return self.instance_iri
 
+class Material(DatatypeProperty):
+    is_defined_by_ontology = JuniorOntology
+    range: as_range(str)
 
 class LabObject(Individual):
     """
@@ -40,7 +49,7 @@ class LabObject(Individual):
         # TODO mutable fields vs immutable fields?
     """
 
-    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
+    material: Material
 
     @property
     def state(self) -> dict:
@@ -73,6 +82,11 @@ class Device(LabObject):
     2. can change its state and other lab objects' states using its action methods,
     3. cannot change another device's state # TODO does this actually matter?
     """
+
+    def model_post_init(self, __context: Any) -> None:
+        # NOTE adding this as it seems to be necessary for other actually overwritten methods to work when multi-inheritance is used
+        # i.e. JuniorLabObject and JuniorInstruction
+        return super().model_post_init(__context)
 
     @property
     def action_names(self) -> list[str]:
@@ -123,10 +137,32 @@ class Device(LabObject):
 
     def act_by_instruction(self, i: Instruction, actor_type: DEVICE_ACTION_METHOD_ACTOR_TYPE):
         """ perform action with an instruction """
-        assert i.device == self
-        return self.act(action_name=i.action_name, action_parameters=i.action_parameters, actor_type=actor_type)
+        assert i.send_to_device.get_range_assume_one() == self
+        return self.act(action_name=i.action_name.get_range_assume_one(), action_parameters=i.action_parameters, actor_type=actor_type)
 
 from typing import List
+
+
+class Send_to_device(ObjectProperty):
+    is_defined_by_ontology = JuniorOntology
+    range: as_range(Device)
+
+
+class Action_name(DatatypeProperty):
+    is_defined_by_ontology = JuniorOntology
+    range: as_range(str)
+
+
+class Description(DatatypeProperty):
+    is_defined_by_ontology = JuniorOntology
+    range: as_range(str)
+
+
+class Preceding_instructions(ObjectProperty):
+    is_defined_by_ontology = JuniorOntology
+    range: as_range(Instruction)
+
+
 class Instruction(Individual):
     """
     an instruction sent to a device for an action
@@ -147,16 +183,16 @@ class Instruction(Individual):
         - ends when
             - the duration, returned by the action method of the actor, has passed
     """
-    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
-    device: Device
-    action_parameters: dict = dict()
-    action_name: str = "dummy"
-    description: str = ""
+    send_to_device: Send_to_device
+    action_parameters: dict = dict() # TODO how to define this as the object property?
+    action_name: Action_name
+    description: Description
 
-    preceding_type: Literal["ALL", "ANY"] = "ALL"
-    # TODO this has no effect as it is not passed to casymda
+    # preceding_type: Literal["ALL", "ANY"] = "ALL"
+    # # TODO this has no effect as it is not passed to casymda
+    # TODO shall we remove it as it is not used?
 
-    preceding_instructions: list[str] = []
+    preceding_instructions: Preceding_instructions
 
     def as_dict(self, identifier_only=True):
         if identifier_only:
@@ -170,20 +206,21 @@ class Instruction(Individual):
         else:
             self.model_dump()
 
-class example_data_property(DataProperty):
-    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
-    range: as_range_of_data_property(str)
 
-class HasInstruction(ObjectProperty):
-    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
-    range: as_range_of_object_property(Instruction)
+class Has_instruction(ObjectProperty):
+    is_defined_by_ontology = JuniorOntology
+    range: as_range(Instruction)
+
+
+class Has_lab_object(ObjectProperty):
+    is_defined_by_ontology = JuniorOntology
+    range: as_range(LabObject)
 
 from pydantic import create_model
 class Lab(BaseClass):
-    is_defined_by_ontology: ClassVar[Type[BaseOntology]] = JuniorOntology
-    example_data_property: example_data_property
-    has_instruction: HasInstruction = Field(default_factory=HasInstruction)
-    dict_object: dict[str, LabObject | Device] = dict()
+    is_defined_by_ontology = JuniorOntology
+    has_instruction: Has_instruction
+    has_lab_object: Has_lab_object
 
     def __getitem__(self, identifier: str):
         return self.dict_object[identifier]
@@ -195,8 +232,12 @@ class Lab(BaseClass):
     def dict_instruction(self):
         return {i.identifier: i for i in self.has_instruction.range}
 
+    @property
+    def dict_object(self):
+        return {i.identifier: i for i in self.has_lab_object.range}
+
     def act_by_instruction(self, i: Instruction, actor_type: DEVICE_ACTION_METHOD_ACTOR_TYPE):
-        actor = self.dict_object[i.device.identifier]  # make sure we are working on the same device
+        actor = self.dict_object[i.send_to_device.identifier]  # make sure we are working on the same device
         assert isinstance(actor, Device)
         return actor.act_by_instruction(i, actor_type=actor_type)
 
@@ -210,15 +251,11 @@ class Lab(BaseClass):
 
     def add_object(self, d: LabObject | Device):
         assert d.identifier not in self.dict_object
-        self.dict_object[d.identifier] = d
+        self.has_lab_object.range.add(d)
 
     def remove_object(self, d: LabObject | Device | str):
-        if isinstance(d, str):
-            assert d in self.dict_object
-            self.dict_object.pop(d)
-        else:
-            assert d.identifier in self.dict_object
-            self.dict_object.pop(d.identifier)
+        assert d in self.has_lab_object.range
+        self.has_lab_object.range.remove(d)
 
     @property
     def state(self) -> dict[str, dict[str, Any]]:
@@ -242,7 +279,7 @@ class Lab(BaseClass):
             diagram.add_node(id=f"{ins.identifier}\n{ins.description}")
 
         for ins in self.dict_instruction.values():
-            for dep in ins.preceding_instructions:
+            for dep in ins.preceding_instructions.range:
                 pre_ins = self.dict_instruction[dep]
                 this_ins_node = f"{ins.identifier}\n{ins.description}"
                 pre_ins_node = f"{pre_ins.identifier}\n{pre_ins.description}"
