@@ -163,8 +163,11 @@ class LabContainer(LabObject):
 
 class Is_contained_by(ObjectProperty):
     rdfs_isDefinedBy = JuniorOntology
+    owl_maxQualifiedCardinality = 1
 
-
+class Is_contained_in_slot(DatatypeProperty):
+    rdfs_isDefinedBy = JuniorOntology
+    owl_maxQualifiedCardinality = 1
 class LabContainee(LabObject):
     """
     lab objects that can be held by another lab container
@@ -176,9 +179,43 @@ class LabContainee(LabObject):
         # i.e. JuniorLabObject and JuniorInstruction
         return super().model_post_init(__context)
 
-    contained_by: str | None = None
+    is_contained_by: Is_contained_by[LabObject] = set()
+    is_contained_in_slot: Optional[Is_contained_in_slot[str]] = "SLOT"
 
-    contained_in_slot: str | None = "SLOT"
+    def __init__(self, **data):
+        # NOTE this is a hack to avoid massive changes in the codebase
+        if 'contained_by' in data:
+            data['is_contained_by'] = {data.pop('contained_by')}
+        if 'contained_in_slot' in data:
+            data['is_contained_in_slot'] = {data.pop('contained_in_slot')}
+        super().__init__(**data)
+
+    @property
+    def contained_by(self):
+        if len(self.is_contained_by) == 0:
+            return None
+        elif len(self.is_contained_by) == 1:
+            return list(self.is_contained_by)[0]
+        else:
+            raise Exception(f'Only one container is allowed for containee {self.instance_iri}, but multiple containers are found: {self.is_contained_by}')
+
+    @contained_by.setter
+    def contained_by(self, container_id: str):
+        if container_id is not None:
+            self.is_contained_by = {container_id}
+        else:
+            self.is_contained_by = set()
+
+    @property
+    def contained_in_slot(self):
+        return list(self.is_contained_in_slot)[0]
+
+    @contained_in_slot.setter
+    def contained_in_slot(self, slot_id: str):
+        if slot_id is not None:
+            self.is_contained_in_slot = {slot_id}
+        else:
+            self.is_contained_in_slot = None
 
     @staticmethod
     def move(containee: LabContainee, dest_container: LabContainer, lab: Lab, dest_slot: str = "SLOT"):
