@@ -50,7 +50,7 @@ class Source(Block):
         for instruction_job in dict_instruction_job.values():
 
             preceding_jobs_completion_events = []
-            for predecessor_identifier in instruction_job.instruction.preceding_instructions.range:
+            for predecessor_identifier in instruction_job.instruction.preceding_instructions:
                 preceding_instruction_job = dict_instruction_job[predecessor_identifier]
                 preceding_jobs_completion_events.append(
                     preceding_instruction_job.is_completed_event

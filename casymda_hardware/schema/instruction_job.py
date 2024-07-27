@@ -82,4 +82,4 @@ class InstructionJob(Entity):
 
     def get_next_machine(self) -> str:
         """Get the next machine to process this job."""
-        return self.instruction.send_to_device.get_range_assume_one().identifier
+        return list(self.instruction.send_to_device)[0].identifier

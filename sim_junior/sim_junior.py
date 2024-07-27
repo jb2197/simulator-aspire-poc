@@ -11,66 +11,66 @@ CONCURRENCY = 1
 
 # RACK A: holding HRVs with DCM, on off deck initially
 RACK_A, RACK_A_VIALS = JuniorRack.create_rack_with_empty_vials(
-    n_vials=CONCURRENCY, rack_capacity=6, vial_type="HRV", rack_id=f"{JuniorOntology.get_namespace_iri()}/RACK-A"
+    n_vials=CONCURRENCY, rack_capacity=6, vial_type="HRV", rack_id=f"{JuniorOntology.namespace_iri}/RACK-A"
 )
 RACK_A: JuniorRack
 RACK_A_VIALS: list[JuniorVial]
 for v in RACK_A_VIALS:
     v.add_content({"DCM": 1000})
-JuniorSlot.put_rack_in_a_slot(RACK_A, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-OFF-1'])
+JuniorSlot.put_rack_in_a_slot(RACK_A, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-OFF-1'])
 
 # RACK B: holding HRVs for reactions, at 2-3-2 initially, one for RSO2Cl stock solution, another for pyridine source
 RACK_B, RACK_B_VIALS = JuniorRack.create_rack_with_empty_vials(
-    n_vials=CONCURRENCY + 1, rack_capacity=8, vial_type="HRV", rack_id=f"{JuniorOntology.get_namespace_iri()}/RACK-B"
+    n_vials=CONCURRENCY + 1, rack_capacity=8, vial_type="HRV", rack_id=f"{JuniorOntology.namespace_iri}/RACK-B"
 )
 RACK_B: JuniorRack
 RACK_B_VIALS: list[JuniorVial]
-JuniorSlot.put_rack_in_a_slot(RACK_B, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-2'])
+JuniorSlot.put_rack_in_a_slot(RACK_B, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-2'])
 
 # RACK C: holding one MRV for reaction, at 2-3-1 initially
 RACK_C, RACK_C_VIALS = JuniorRack.create_rack_with_empty_vials(
-    n_vials=CONCURRENCY, rack_capacity=6, vial_type="MRV", rack_id=f"{JuniorOntology.get_namespace_iri()}/RACK-C"
+    n_vials=CONCURRENCY, rack_capacity=6, vial_type="MRV", rack_id=f"{JuniorOntology.namespace_iri}/RACK-C"
 )
 RACK_C: JuniorRack
 RACK_C_VIALS: list[JuniorVial]
-JuniorSlot.put_rack_in_a_slot(RACK_C, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-1'])
+JuniorSlot.put_rack_in_a_slot(RACK_C, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-1'])
 
 # RACK D: holding PDP tips, at 2-3-3 initially
 RACK_D, RACK_D_TIPS = JuniorRack.create_rack_with_empty_tips(
-    n_tips=CONCURRENCY, rack_capacity=6, rack_id=f"{JuniorOntology.get_namespace_iri()}/RACK-D", tip_id_inherit=True
+    n_tips=CONCURRENCY, rack_capacity=6, rack_id=f"{JuniorOntology.namespace_iri}/RACK-D", tip_id_inherit=True
 )
 RACK_D: JuniorRack
 RACK_D_TIPS: list[JuniorPdpTip]
-JuniorSlot.put_rack_in_a_slot(RACK_D, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-3'])
+JuniorSlot.put_rack_in_a_slot(RACK_D, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-3'])
 
 # SV VIALS, one for solid amine (aniline), another for RSO2Cl, each sits in a SVV SLOT
 SVV_1 = JuniorVial(
-    identifier=f"{JuniorOntology.get_namespace_iri()}/SV-VIAL-1", contained_by=JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SVV-SLOT-1'].identifier,
+    identifier=f"{JuniorOntology.namespace_iri}/SV-VIAL-1", contained_by=JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SVV-SLOT-1'].identifier,
     vial_type='SV', contained_in_slot='SLOT'
 )
 SVV_1.add_content({"solid amine": 1000})
 SVV_2 = JuniorVial(
-    identifier=f"{JuniorOntology.get_namespace_iri()}/SV-VIAL-2", contained_by=JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SVV-SLOT-2'].identifier,
+    identifier=f"{JuniorOntology.namespace_iri}/SV-VIAL-2", contained_by=JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SVV-SLOT-2'].identifier,
     vial_type='SV', contained_in_slot='SLOT'
 )
 SVV_2.add_content({'sulfonyl chloride': 1000})
-JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SVV-SLOT-1'].has_slot_content.range.add(SVV_1)
-JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SVV-SLOT-2'].has_slot_content.range.add(SVV_2)
+JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SVV-SLOT-1'].has_slot_content.add(SVV_1)
+JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SVV-SLOT-2'].has_slot_content.add(SVV_2)
 
 # INSTRUCTIONS
-Z1_ARM = JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/Z1-ARM']
-Z2_ARM = JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/Z2-ARM']
-ARM_PLATFORM = JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/ARM-PLATFORM']
+Z1_ARM = JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/Z1-ARM']
+Z2_ARM = JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/Z2-ARM']
+ARM_PLATFORM = JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/ARM-PLATFORM']
 
-Z1NEEDLES = [JUNIOR_LAB[f"{JuniorOntology.get_namespace_iri()}/Z1-Needle-{i + 1}"] for i in range(CONCURRENCY)]
+Z1NEEDLES = [JUNIOR_LAB[f"{JuniorOntology.namespace_iri}/Z1-Needle-{i + 1}"] for i in range(CONCURRENCY)]
 
-VPG = JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/VPG']
-VPG_SLOT = JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/VPG-SLOT']
-SV_TOOL = JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SV-TOOL']
-SV_TOOL_SLOT = JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SV-TOOL-SLOT']
-BALANCE_SLOT = JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/BALANCE-SLOT']
+VPG = JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/VPG']
+VPG_SLOT = JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/VPG-SLOT']
+SV_TOOL = JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SV-TOOL']
+SV_TOOL_SLOT = JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SV-TOOL-SLOT']
+BALANCE_SLOT = JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/BALANCE-SLOT']
 
-PDP_1 = JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/PDT-1']
+PDP_1 = JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/PDT-1']
 
 DCM_VIALS = RACK_A_VIALS
 MRV_VIALS = RACK_C_VIALS
@@ -308,14 +308,14 @@ def needle_dispense(
         send_to_device=ARM_PLATFORM, action_name="move_to",
         action_parameters={
             "anchor_arm": Z1_ARM,
-            "move_to_slot": JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/WASH-BAY'],
+            "move_to_slot": JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/WASH-BAY'],
         },
         description=f"move to slot: WASH BAY"
     )
     ins6 = JuniorInstruction(
         send_to_device=Z1_ARM, action_name="wash",
         action_parameters={
-            "wash_bay": JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/WASH-BAY'],
+            "wash_bay": JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/WASH-BAY'],
         },
         description="wash needles"
     )
@@ -335,7 +335,7 @@ def pdp_dispense(
         send_to_device=ARM_PLATFORM, action_name="move_to",
         action_parameters={
             "anchor_arm": Z2_ARM,
-            "move_to_slot": JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/PDT-SLOT-1'],
+            "move_to_slot": JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/PDT-SLOT-1'],
         },
         description=f"move to slot: PDT SLOT 1"
     )
@@ -400,14 +400,14 @@ def pdp_dispense(
             send_to_device=ARM_PLATFORM, action_name="move_to",
             action_parameters={
                 "anchor_arm": Z2_ARM,
-                "move_to_slot": JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/DISPOSAL'],
+                "move_to_slot": JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/DISPOSAL'],
             },
             description=f"move to slot: DISPOSAL"
         )
         i_h = JuniorInstruction(
             send_to_device=Z2_ARM, action_name="put_down",
             action_parameters={
-                "dest_slot": JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/DISPOSAL'],
+                "dest_slot": JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/DISPOSAL'],
             },
             description="put down: DISPOSAL"
         )
@@ -416,85 +416,85 @@ def pdp_dispense(
     return ins_list
 
 
-ins_list1 = pick_drop_rack_to(RACK_B, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-2'], BALANCE_SLOT)
+ins_list1 = pick_drop_rack_to(RACK_B, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-2'], BALANCE_SLOT)
 
 ins_list2 = solid_dispense(sv_vial=SVV_2,
-                           sv_vial_slot=JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SVV-SLOT-2'],
+                           sv_vial_slot=JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SVV-SLOT-2'],
                            dest_vials=RSO2Cl_STOCK_SOLUTION_VIALS,
                            amount=10,
                            include_pickup_svtool=True,
                            include_dropoff_svvial=True,
                            include_dropoff_svtool=True)
-ins_list2[0].preceding_instructions.range.add(ins_list1[-1].identifier)
+ins_list2[0].preceding_instructions.add(ins_list1[-1].identifier)
 
-ins_list3 = pick_drop_rack_to(RACK_B, BALANCE_SLOT, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-2'])
-ins_list3[0].preceding_instructions.range.add(ins_list2[-1].identifier)
+ins_list3 = pick_drop_rack_to(RACK_B, BALANCE_SLOT, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-2'])
+ins_list3[0].preceding_instructions.add(ins_list2[-1].identifier)
 
-ins_list4 = pick_drop_rack_to(RACK_C, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-1'], BALANCE_SLOT)
-ins_list4[0].preceding_instructions.range.add(ins_list3[-1].identifier)
+ins_list4 = pick_drop_rack_to(RACK_C, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-1'], BALANCE_SLOT)
+ins_list4[0].preceding_instructions.add(ins_list3[-1].identifier)
 
-ins_list5 = solid_dispense(sv_vial=SVV_1, sv_vial_slot=JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SVV-SLOT-1'],
+ins_list5 = solid_dispense(sv_vial=SVV_1, sv_vial_slot=JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SVV-SLOT-1'],
                            dest_vials=MRV_VIALS,
                            amount=10,
                            include_pickup_svtool=True,
                            include_dropoff_svvial=True, include_dropoff_svtool=True)
-ins_list5[0].preceding_instructions.range.add(ins_list4[-1].identifier)
+ins_list5[0].preceding_instructions.add(ins_list4[-1].identifier)
 
-ins_list6 = pick_drop_rack_to(RACK_C, BALANCE_SLOT, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-1'])
-ins_list6[0].preceding_instructions.range.add(ins_list5[-1].identifier)
+ins_list6 = pick_drop_rack_to(RACK_C, BALANCE_SLOT, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-1'])
+ins_list6[0].preceding_instructions.add(ins_list5[-1].identifier)
 
-ins_list7 = needle_dispense(DCM_VIALS, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-OFF-1'], MRV_VIALS, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-1'], 10)
-ins_list7[0].preceding_instructions.range.add(ins_list6[-1].identifier)
+ins_list7 = needle_dispense(DCM_VIALS, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-OFF-1'], MRV_VIALS, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-1'], 10)
+ins_list7[0].preceding_instructions.add(ins_list6[-1].identifier)
 
-ins_list8 = needle_dispense(DCM_VIALS, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-OFF-1'], RSO2Cl_STOCK_SOLUTION_VIALS, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-2'],
+ins_list8 = needle_dispense(DCM_VIALS, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-OFF-1'], RSO2Cl_STOCK_SOLUTION_VIALS, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-2'],
                             10)
-ins_list8[0].preceding_instructions.range.add(ins_list7[-1].identifier)
+ins_list8[0].preceding_instructions.add(ins_list7[-1].identifier)
 
-ins_list9 = pdp_dispense(PYRIDINE_VIAL, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-2'], RACK_D_TIPS, JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-3'], MRV_VIALS,
-                         JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-1'], 10)
-ins_list9[0].preceding_instructions.range.add(ins_list8[-1].identifier)
+ins_list9 = pdp_dispense(PYRIDINE_VIAL, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-2'], RACK_D_TIPS, JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-3'], MRV_VIALS,
+                         JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-1'], 10)
+ins_list9[0].preceding_instructions.add(ins_list8[-1].identifier)
 
 ins_stir1 = JuniorInstruction(
-    send_to_device=JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-1'], action_name="wait", action_parameters={"wait_time": 300},
+    send_to_device=JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-1'], action_name="wait", action_parameters={"wait_time": 300},
     description="wait for 5 min"
 )
 ins_stir2 = JuniorInstruction(
-    send_to_device=JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-2'], action_name="wait", action_parameters={"wait_time": 300},
+    send_to_device=JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-2'], action_name="wait", action_parameters={"wait_time": 300},
     description="wait for 5 min"
 )
 ins_stir3 = JuniorInstruction(
-    send_to_device=JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-3'], action_name="wait", action_parameters={"wait_time": 300},
+    send_to_device=JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-3'], action_name="wait", action_parameters={"wait_time": 300},
     description="wait for 5 min"
 )
 
 for i in [ins_stir1, ins_stir2, ins_stir3]:
-    i.preceding_instructions.range.add(ins_list9[-1].identifier)
+    i.preceding_instructions.add(ins_list9[-1].identifier)
 
 ins_list10 = needle_dispense(
     RSO2Cl_STOCK_SOLUTION_VIALS,
-    JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-2'],
+    JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-2'],
     MRV_VIALS,
-    JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-1'],
+    JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-1'],
     10
 )
 
-ins_list10[0].preceding_instructions.range = {ins_stir1.identifier, ins_stir2.identifier, ins_stir3.identifier}
+ins_list10[0].preceding_instructions = {ins_stir1.identifier, ins_stir2.identifier, ins_stir3.identifier}
 
 ins_stir21 = JuniorInstruction(
-    send_to_device=JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-1'], action_name="wait", action_parameters={"wait_time": 7200},
+    send_to_device=JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-1'], action_name="wait", action_parameters={"wait_time": 7200},
     description="wait for 120 min"
 )
 ins_stir22 = JuniorInstruction(
-    send_to_device=JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-2'], action_name="wait", action_parameters={"wait_time": 7200},
+    send_to_device=JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-2'], action_name="wait", action_parameters={"wait_time": 7200},
     description="wait for 120 min"
 )
 ins_stir23 = JuniorInstruction(
-    send_to_device=JUNIOR_LAB[f'{JuniorOntology.get_namespace_iri()}/SLOT-2-3-3'], action_name="wait", action_parameters={"wait_time": 7200},
+    send_to_device=JUNIOR_LAB[f'{JuniorOntology.namespace_iri}/SLOT-2-3-3'], action_name="wait", action_parameters={"wait_time": 7200},
     description="wait for 120 min"
 )
 
 for i in [ins_stir21, ins_stir22, ins_stir23]:
-    i.preceding_instructions.range.add(ins_list10[-1].identifier)
+    i.preceding_instructions.add(ins_list10[-1].identifier)
 
 # TODO fix bug `SyntaxError: prefix 'down' not found in prefix map`
 # diagram = JUNIOR_LAB.instruction_graph

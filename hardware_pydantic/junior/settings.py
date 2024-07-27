@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Literal, ClassVar, Type
 
 from hardware_pydantic.base import Lab, LabObject, Instruction, JuniorOntology
-from twa.data_model.base_ontology import BaseClass, BaseOntology, ObjectProperty, DatatypeProperty, as_range
+from twa.data_model.base_ontology import BaseClass, BaseOntology, ObjectProperty, DatatypeProperty
 
 JUNIOR_LAYOUT_SLOT_SIZE_X = 80
 JUNIOR_LAYOUT_SLOT_SIZE_Y = 120
@@ -34,23 +34,19 @@ class JuniorInstruction(Instruction):
     def path_graph(ins_list: list[JuniorInstruction]):
         for i in range(1, len(ins_list)):
             ins = ins_list[i]
-            ins.preceding_instructions.range.add(ins_list[i-1].identifier)
+            ins.preceding_instructions.add(ins_list[i-1].identifier)
 
 class Layout_x(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(float)
+    rdfs_isDefinedBy = JuniorOntology
 
 class Layout_y(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(float)
+    rdfs_isDefinedBy = JuniorOntology
 
 class Absolute_layout_position_x(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(float)
+    rdfs_isDefinedBy = JuniorOntology
 
 class Absolute_layout_position_y(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(float)
+    rdfs_isDefinedBy = JuniorOntology
 
 
 class JuniorLayout(BaseClass):
@@ -66,11 +62,11 @@ class JuniorLayout(BaseClass):
         The y length, Default is JUNIOR_LAYOUT_SLOT_SIZE_Y.
 
     """
-    is_defined_by_ontology = JuniorOntology
-    absolute_layout_position_x: Absolute_layout_position_x
-    absolute_layout_position_y: Absolute_layout_position_y
-    layout_x: Layout_x
-    layout_y: Layout_y
+    rdfs_isDefinedBy = JuniorOntology
+    absolute_layout_position_x: Absolute_layout_position_x[float]
+    absolute_layout_position_y: Absolute_layout_position_y[float]
+    layout_x: Layout_x[float]
+    layout_y: Layout_y[float]
 
     def __init__(self, **data):
         if 'layout_x' not in data:
@@ -86,8 +82,8 @@ class JuniorLayout(BaseClass):
     @property
     def layout_position(self):
         return tuple([
-            self.absolute_layout_position_x.get_range_assume_one(),
-            self.absolute_layout_position_y.get_range_assume_one()])
+            list(self.absolute_layout_position_x)[0],
+            list(self.absolute_layout_position_y)[0]])
 
     @classmethod
     def from_relative_layout(
@@ -122,9 +118,9 @@ class JuniorLayout(BaseClass):
         else:
             if layout_relation == "above":
                 absolute_layout_position_x = layout_relative.layout_position[0]
-                absolute_layout_position_y = layout_relative.layout_position[1] + layout_relative.layout_y.get_range_assume_one() + 20
+                absolute_layout_position_y = layout_relative.layout_position[1] + list(layout_relative.layout_y)[0] + 20
             elif layout_relation == "right_to":
-                absolute_layout_position_x = layout_relative.layout_position[0] + layout_relative.layout_x.get_range_assume_one() + 20
+                absolute_layout_position_x = layout_relative.layout_position[0] + list(layout_relative.layout_x)[0] + 20
                 absolute_layout_position_y = layout_relative.layout_position[1]
             else:
                 raise ValueError
@@ -136,5 +132,4 @@ class JuniorLayout(BaseClass):
         )
 
 class Layout(ObjectProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(JuniorLayout)
+    rdfs_isDefinedBy = JuniorOntology

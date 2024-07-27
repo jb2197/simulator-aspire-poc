@@ -12,6 +12,6 @@ setup(
     long_description=open('readme.md').read(),
     long_description_content_type="text/markdown",
     packages=find_namespace_packages(exclude=['tests','tests.*']),
-    install_requires=['rdkit', 'rdflib', 'twa>=0.0.3'],
+    install_requires=['rdkit', 'rdflib', 'twa>=0.0.4a0'],
     include_package_data=True
 )

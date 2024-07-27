@@ -1,27 +1,24 @@
 from __future__ import annotations
 
-from typing import Type
+from typing import Type, Optional
 
 from hardware_pydantic.base import Lab, LabObject, JuniorOntology, Individual, Material
-from twa.data_model.base_ontology import BaseClass, ObjectProperty, DatatypeProperty, as_range
+from twa.data_model.base_ontology import BaseClass, ObjectProperty, DatatypeProperty
 
 
 class Volume_capacity(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(float)
+    rdfs_isDefinedBy = JuniorOntology
 
 class Chemical_name(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(str)
+    rdfs_isDefinedBy = JuniorOntology
 
 class Amount(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(float)
+    rdfs_isDefinedBy = JuniorOntology
 
 class ChemicalContent(Individual):
-    is_defined_by_ontology = JuniorOntology
-    chemical_name: Chemical_name
-    amount: Amount
+    rdfs_isDefinedBy = JuniorOntology
+    chemical_name: Chemical_name[str]
+    amount: Amount[float]
 
     def __init__(self, **data):
         # NOTE this is a workaround to make sure the value is casted to float
@@ -30,14 +27,7 @@ class ChemicalContent(Individual):
         super().__init__(**data)
 
 class Has_chemical_content(ObjectProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(ChemicalContent)
-
-    def get_content(self, chemical_name: str) -> ChemicalContent | None:
-        for c in self.range:
-            if c.chemical_name.get_range_assume_one() == chemical_name:
-                return c
-        return None
+    rdfs_isDefinedBy = JuniorOntology
 
 class ChemicalContainer(LabObject):
     """
@@ -46,11 +36,11 @@ class ChemicalContainer(LabObject):
     subclass of [container](http://purl.allotrope.org/ontologies/equipment#AFE_0000407)
     """
 
-    volume_capacity: Volume_capacity = Volume_capacity(range=40.0)
+    volume_capacity: Volume_capacity[float] = 40.0
 
-    material: Material = Material(range="GLASS")
+    material: Material[str] = "GLASS"
 
-    has_chemical_content: Has_chemical_content
+    has_chemical_content: Optional[Has_chemical_content[ChemicalContent]] = set()
     # chemical_content: dict[str, float] = dict()
     """ what is inside now? """
 
@@ -61,7 +51,7 @@ class ChemicalContainer(LabObject):
 
     @property
     def chemical_content(self) -> dict[str, float]:
-        return {c.chemical_name.get_range_assume_one(): c.amount.get_range_assume_one() for c in self.has_chemical_content.range}
+        return {list(c.chemical_name)[0]: list(c.amount)[0] for c in self.has_chemical_content}
 
     @property
     def content_sum(self) -> float:
@@ -72,9 +62,15 @@ class ChemicalContainer(LabObject):
     def add_content(self, content: dict[str, float]):
         for k, v in content.items():
             if k not in self.chemical_content:
-                self.has_chemical_content.range.add(ChemicalContent(chemical_name=k, amount=v))
+                self.has_chemical_content.add(ChemicalContent(chemical_name=k, amount=v))
             else:
-                self.has_chemical_content.get_content(k).amount.range = {self.has_chemical_content.get_content(k).amount.get_range_assume_one() + content[k]}
+                self.get_content(k).amount = {list(self.get_content(k).amount)[0] + content[k]}
+
+    def get_content(self, chemical_name: str) -> ChemicalContent | None:
+        for c in self.has_chemical_content:
+            if list(c.chemical_name)[0] == chemical_name:
+                return c
+        return None
 
     def remove_content(self, amount: float) -> dict[str, float]:
         # by default the content is homogeneous liquid
@@ -82,23 +78,20 @@ class ChemicalContainer(LabObject):
         removed = dict()
         for k in self.chemical_content:
             removed[k] = self.chemical_content[k] * pct
-            self.has_chemical_content.get_content(k).amount.range = {self.has_chemical_content.get_content(k).amount.get_range_assume_one() - removed[k]}
+            self.get_content(k).amount = {list(self.get_content(k).amount)[0] - removed[k]}
         return removed
 
 
 class Can_contain(ObjectProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(LabObject)
+    rdfs_isDefinedBy = JuniorOntology
 
 
 class Capacity(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(int)
+    rdfs_isDefinedBy = JuniorOntology
 
 
 class Has_slot_content(ObjectProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(LabObject)
+    rdfs_isDefinedBy = JuniorOntology
 
 class LabContainer(LabObject):
     """
@@ -114,25 +107,25 @@ class LabContainer(LabObject):
         # i.e. JuniorLabObject and JuniorInstruction
         return super().model_post_init(__context)
 
-    can_contain: Can_contain
+    can_contain: Can_contain[LabObject]
     """ the class names of the thing it can hold """
     # TODO validation
 
-    capacity: Capacity
-    has_slot_content: Has_slot_content
+    capacity: Optional[Capacity[int]] = None
+    has_slot_content: Optional[Has_slot_content[LabObject]] = []
 
     @property
     def slot_content(self):
         """ dict[<slot identifier>, <object identifier>] """
-        if len(self.has_slot_content.range) == 0:
+        if len(self.has_slot_content) == 0:
             return {'SLOT': None}
         else:
-            return {k.contained_in_slot: k.identifier for k in self.has_slot_content.range}
+            return {k.contained_in_slot: k.identifier for k in self.has_slot_content}
 
     @property
     def empty_slot_keys(self):
         lst = [str(k+1) for k in range(self.slot_capacity)]
-        for k in self.has_slot_content.range:
+        for k in self.has_slot_content:
             if k.contained_in_slot in lst:
                 lst.remove(k.contained_in_slot)
             else:
@@ -141,7 +134,7 @@ class LabContainer(LabObject):
 
     @property
     def slot_capacity(self):
-        return self.capacity.get_range_assume_one()
+        return list(self.capacity)[0]
 
     @classmethod
     def from_capacity(cls, can_contain: list[str], capacity: int = 16, container_id: str = None, **kwargs) -> LabContainer:
@@ -169,8 +162,7 @@ class LabContainer(LabObject):
 
 
 class Is_contained_by(ObjectProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(LabObject)
+    rdfs_isDefinedBy = JuniorOntology
 
 
 class LabContainee(LabObject):
@@ -194,9 +186,9 @@ class LabContainee(LabObject):
             source_container = lab[containee.contained_by]
             source_container: LabContainer
             assert source_container.slot_content[containee.contained_in_slot] == containee.identifier
-            source_container.has_slot_content.range.remove(containee)
+            source_container.has_slot_content.remove(containee)
         assert dest_container.slot_content[dest_slot] is None
-        dest_container.has_slot_content.range.add(containee)
+        dest_container.has_slot_content.add(containee)
         containee.contained_by = dest_container.identifier
         containee.contained_in_slot = dest_slot
 

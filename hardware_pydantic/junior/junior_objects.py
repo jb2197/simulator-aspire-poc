@@ -1,16 +1,17 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from hardware_pydantic.junior.settings import JUNIOR_LAB, JuniorLabObject, JUNIOR_VIAL_TYPE, JuniorLayout, Layout
 from hardware_pydantic.lab_objects import ChemicalContainer, LabContainee, LabContainer, Can_contain
-from hardware_pydantic.base import JuniorOntology, Material
+from hardware_pydantic.base import JuniorOntology, Material, LabObject
 
-from twa.data_model.base_ontology import DatatypeProperty, as_range
+from twa.data_model.base_ontology import DatatypeProperty
 
 """"Lab objects for the JUNIOR platform from NCATS."""
 
 class Is_spinning(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(bool)
+    rdfs_isDefinedBy = JuniorOntology
 
 class JuniorStirBar(LabContainee, JuniorLabObject):
     """A stir bar that can be placed in a vial.
@@ -23,9 +24,9 @@ class JuniorStirBar(LabContainee, JuniorLabObject):
         Whether the stir bar is spinning. Default is False.
 
     """
-    material: Material = Material(range="TEFLON")
+    material: Material[str] = "TEFLON"
 
-    is_spinning: Is_spinning = Is_spinning(range=False)
+    is_spinning: Is_spinning[bool] = False
 
 
 class JuniorVial(ChemicalContainer, LabContainee, LabContainer, JuniorLabObject):
@@ -40,7 +41,7 @@ class JuniorVial(ChemicalContainer, LabContainee, LabContainer, JuniorLabObject)
 
     """
 
-    can_contain: Can_contain = Can_contain(range=[JuniorStirBar.get_rdf_type(), ])
+    can_contain: Can_contain[LabObject] = [JuniorStirBar.rdf_type, ]
 
     vial_type: JUNIOR_VIAL_TYPE = "HRV"
 
@@ -54,7 +55,7 @@ class JuniorPdpTip(ChemicalContainer, LabContainee, JuniorLabObject):
         The material the tip is made of. Default is "PLASTIC".
 
     """
-    material: Material = Material(range="PLASTIC")
+    material: Material[str] = "PLASTIC"
 
 
 class JuniorRack(LabContainer, LabContainee, JuniorLabObject):
@@ -108,7 +109,7 @@ class JuniorRack(LabContainer, LabContainee, JuniorLabObject):
                 v = JuniorVial(
                     contained_by=rack.identifier, contained_in_slot=idx,
                 )
-            rack.has_slot_content.range.add(v)
+            rack.has_slot_content.add(v)
             tips.append(v)
             n_created += 1
             if n_created == n_tips:
@@ -166,7 +167,7 @@ class JuniorRack(LabContainer, LabContainee, JuniorLabObject):
                 v = JuniorVial(
                     contained_by=rack.identifier, contained_in_slot=idx, vial_type=vial_type,
                 )
-            rack.has_slot_content.range.add(v)
+            rack.has_slot_content.add(v)
             vials.append(v)
             n_created += 1
             if n_created == n_vials:
@@ -184,7 +185,7 @@ class JuniorVpg(LabContainee, LabContainer, JuniorLabObject):
 
     """
 
-    can_contain: Can_contain = Can_contain(range=[JuniorRack.get_rdf_type(), ])
+    can_contain: Can_contain[LabObject] = [JuniorRack.rdf_type, ]
 
     @property
     def rack(self) -> JuniorRack | None:
@@ -213,7 +214,7 @@ class JuniorPdp(LabContainee, LabContainer, JuniorLabObject):
         strings containing the name of the positive displacement pipette tip.
     """
 
-    can_contain: Can_contain = Can_contain(range=[JuniorPdpTip.get_rdf_type(), ])
+    can_contain: Can_contain[LabObject] = [JuniorPdpTip.rdf_type, ]
 
     @property
     def tip(self) -> JuniorPdpTip | None:
@@ -232,8 +233,7 @@ class JuniorPdp(LabContainee, LabContainer, JuniorLabObject):
 
 
 class Powder_param_known(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(bool)
+    rdfs_isDefinedBy = JuniorOntology
 
 class JuniorSvt(LabContainee, LabContainer, JuniorLabObject):
     """The SV tool which is the z2 attachment used to hold a SV vial.
@@ -248,9 +248,9 @@ class JuniorSvt(LabContainee, LabContainer, JuniorLabObject):
 
     """
 
-    can_contain: Can_contain = Can_contain(range=[JuniorVial.get_rdf_type(), ])
+    can_contain: Can_contain[LabObject] = [JuniorVial.rdf_type, ]
 
-    powder_param_known: Powder_param_known = Powder_param_known(range=False)
+    powder_param_known: Powder_param_known[bool] = False
 
     @property
     def sv_vial(self) -> JuniorVial | None:
@@ -282,13 +282,12 @@ class JuniorWashBay(JuniorLabObject):
         The layout of the wash bay. Default is None.
 
     """
-    layout: Layout
+    layout: Layout[JuniorLayout]
 
 
 class Disposal_content(DatatypeProperty):
     # TODO should be an object property
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(str)
+    rdfs_isDefinedBy = JuniorOntology
 
 class JuniorTipDisposal(JuniorLabObject):
     """The tip disposal for used PdpTips.
@@ -301,9 +300,9 @@ class JuniorTipDisposal(JuniorLabObject):
         The list of objects that can be disposed of in the tip disposal. Default is an empty list.
 
     """
-    layout: Layout
+    layout: Layout[JuniorLayout]
 
-    disposal_content: Disposal_content
+    disposal_content: Optional[Disposal_content[str]] = set()
 
 
 """python

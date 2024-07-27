@@ -83,10 +83,10 @@ def get_layout_figure(lab: Lab) -> go.Figure:
 
     for k, v in lab.dict_object.items():
         if isinstance(v, (JuniorSlot, JuniorWashBay, JuniorTipDisposal)):
-            layout = v.layout.get_range_assume_one()
+            layout = list(v.layout)[0]
             layout: JuniorLayout
-            layout_x = layout.layout_x.get_range_assume_one()
-            layout_y = layout.layout_y.get_range_assume_one()
+            layout_x = list(layout.layout_x)[0]
+            layout_y = list(layout.layout_y)[0]
             x0, y0 = layout.layout_position
             x1 = x0 + layout_x
             y1 = y0 + layout_y

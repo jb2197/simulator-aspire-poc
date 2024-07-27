@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, Type, ClassVar
+from typing import Any, Literal, Type, ClassVar, Optional
 
 from N2G import drawio_diagram  # only used for drawing instruction DAG
 from pydantic import Field
@@ -10,7 +10,6 @@ from twa.data_model.base_ontology import BaseOntology
 from twa.data_model.base_ontology import BaseClass
 from twa.data_model.base_ontology import ObjectProperty
 from twa.data_model.base_ontology import DatatypeProperty
-from twa.data_model.base_ontology import as_range
 
 
 from .utils import str_uuid
@@ -28,16 +27,15 @@ class JuniorOntology(BaseOntology):
 
 class Individual(BaseClass):
     """ a thing with an identifier """
-    is_defined_by_ontology = JuniorOntology
-    instance_iri: str = Field(default=None, alias='identifier')
+    rdfs_isDefinedBy = JuniorOntology
+    instance_iri: str = Field(default='', alias='identifier')
 
     @property
     def identifier(self) -> str:
         return self.instance_iri
 
 class Material(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(str)
+    rdfs_isDefinedBy = JuniorOntology
 
 class LabObject(Individual):
     """
@@ -49,7 +47,7 @@ class LabObject(Individual):
         # TODO mutable fields vs immutable fields?
     """
 
-    material: Material
+    material: Optional[Material[str]] = None
 
     @property
     def state(self) -> dict:
@@ -137,30 +135,26 @@ class Device(LabObject):
 
     def act_by_instruction(self, i: Instruction, actor_type: DEVICE_ACTION_METHOD_ACTOR_TYPE):
         """ perform action with an instruction """
-        assert i.send_to_device.get_range_assume_one() == self
-        return self.act(action_name=i.action_name.get_range_assume_one(), action_parameters=i.action_parameters, actor_type=actor_type)
+        assert list(i.send_to_device)[0] == self
+        return self.act(action_name=list(i.action_name)[0], action_parameters=i.action_parameters, actor_type=actor_type)
 
 from typing import List
 
 
 class Send_to_device(ObjectProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(Device)
+    rdfs_isDefinedBy = JuniorOntology
 
 
 class Action_name(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(str)
+    rdfs_isDefinedBy = JuniorOntology
 
 
 class Description(DatatypeProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(str)
+    rdfs_isDefinedBy = JuniorOntology
 
 
 class Preceding_instructions(ObjectProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(Instruction)
+    rdfs_isDefinedBy = JuniorOntology
 
 
 class Instruction(Individual):
@@ -183,16 +177,16 @@ class Instruction(Individual):
         - ends when
             - the duration, returned by the action method of the actor, has passed
     """
-    send_to_device: Send_to_device
+    send_to_device: Send_to_device[Device]
     action_parameters: dict = dict() # TODO how to define this as the object property?
-    action_name: Action_name
-    description: Description
+    action_name: Action_name[str]
+    description: Description[str]
 
     # preceding_type: Literal["ALL", "ANY"] = "ALL"
     # # TODO this has no effect as it is not passed to casymda
     # TODO shall we remove it as it is not used?
 
-    preceding_instructions: Preceding_instructions
+    preceding_instructions: Optional[Preceding_instructions[Instruction]] = set()
 
     def as_dict(self, identifier_only=True):
         if identifier_only:
@@ -208,19 +202,17 @@ class Instruction(Individual):
 
 
 class Has_instruction(ObjectProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(Instruction)
+    rdfs_isDefinedBy = JuniorOntology
 
 
 class Has_lab_object(ObjectProperty):
-    is_defined_by_ontology = JuniorOntology
-    range: as_range(LabObject)
+    rdfs_isDefinedBy = JuniorOntology
 
 from pydantic import create_model
 class Lab(BaseClass):
-    is_defined_by_ontology = JuniorOntology
-    has_instruction: Has_instruction
-    has_lab_object: Has_lab_object
+    rdfs_isDefinedBy = JuniorOntology
+    has_instruction: Optional[Has_instruction[Instruction]] = set()
+    has_lab_object: Optional[Has_lab_object[LabObject]] = set()
 
     def __getitem__(self, identifier: str):
         return self.dict_object[identifier]
@@ -230,11 +222,11 @@ class Lab(BaseClass):
 
     @property
     def dict_instruction(self):
-        return {i.identifier: i for i in self.has_instruction.range}
+        return {i.identifier: i for i in self.has_instruction}
 
     @property
     def dict_object(self):
-        return {i.identifier: i for i in self.has_lab_object.range}
+        return {i.identifier: i for i in self.has_lab_object}
 
     def act_by_instruction(self, i: Instruction, actor_type: DEVICE_ACTION_METHOD_ACTOR_TYPE):
         actor = self.dict_object[i.send_to_device.identifier]  # make sure we are working on the same device
@@ -242,20 +234,20 @@ class Lab(BaseClass):
         return actor.act_by_instruction(i, actor_type=actor_type)
 
     def add_instruction(self, i: Instruction):
-        assert i.identifier not in self.has_instruction.range
-        self.has_instruction.range.add(i)
+        assert i.identifier not in self.has_instruction
+        self.has_instruction.add(i)
 
     def remove_instruction(self, i: Instruction | str):
-        assert i in self.has_instruction.range
-        self.has_instruction.range.remove(i)
+        assert i in self.has_instruction
+        self.has_instruction.remove(i)
 
     def add_object(self, d: LabObject | Device):
         assert d.identifier not in self.dict_object
-        self.has_lab_object.range.add(d)
+        self.has_lab_object.add(d)
 
     def remove_object(self, d: LabObject | Device | str):
-        assert d in self.has_lab_object.range
-        self.has_lab_object.range.remove(d)
+        assert d in self.has_lab_object
+        self.has_lab_object.remove(d)
 
     @property
     def state(self) -> dict[str, dict[str, Any]]:
@@ -279,7 +271,7 @@ class Lab(BaseClass):
             diagram.add_node(id=f"{ins.identifier}\n{ins.description}")
 
         for ins in self.dict_instruction.values():
-            for dep in ins.preceding_instructions.range:
+            for dep in ins.preceding_instructions:
                 pre_ins = self.dict_instruction[dep]
                 this_ins_node = f"{ins.identifier}\n{ins.description}"
                 pre_ins_node = f"{pre_ins.identifier}\n{pre_ins.description}"
