@@ -9,7 +9,7 @@ def needle_dispense(
         dest_vials_slot: JuniorSlot,
         amounts: list[float],
 ):
-    z1_needles = [JUNIOR_LAB[f"Z1 Needle {i + 1}"] for i in range(len(amounts))]
+    z1_needles = [JUNIOR_LAB[f"{JuniorOntology.namespace_iri}/Z1-Needle-{i + 1}"] for i in range(len(amounts))]
     ins1 = JuniorInstruction(
         send_to_device=junior_benchtop.ARM_PLATFORM, action_name="move_to",
         action_parameters={

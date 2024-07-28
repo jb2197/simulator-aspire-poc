@@ -120,7 +120,7 @@ class JuniorSlot(JuniorBaseHeater, JuniorBaseStirrer):
         if rack.contained_by is not None:
             prev_slot = JUNIOR_LAB[rack.contained_by]
             assert isinstance(prev_slot, JuniorSlot)
-            prev_slot.slot_content["SLOT"] = None
+            prev_slot.has_slot_content.remove(rack)
         assert rack.__class__.rdf_type in slot.can_contain
         rack.contained_by = slot.identifier
         rack.contained_in_slot = "SLOT"
@@ -726,7 +726,7 @@ class JuniorArmZ2(LabContainer, LabContainee, JuniorBaseLiquidDispenser):
         )
 
 # if __name__ == '__main__':
-#     slot = JuniorSlot(identifier="slot1", can_contain=[JuniorRack.__name__])
+#     slot = JuniorSlot(identifier="slot1", can_contain=[JuniorRack.rdf_type])
 #     jr, vials = JuniorRack.create_rack_with_empty_vials()
 #     JuniorSlot.put_rack_in_a_slot(jr, slot)
 #     # print(LabContainer.get_all_containees(slot, JUNIOR_LAB))

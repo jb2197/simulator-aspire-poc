@@ -90,7 +90,7 @@ class JuniorRack(LabContainer, LabContainee, JuniorLabObject):
 
         """
         rack = JuniorRack.from_capacity(
-            can_contain=[JuniorPdpTip.__name__, ], capacity=rack_capacity, container_id=rack_id
+            can_contain=[JuniorPdpTip.rdf_type, ], capacity=rack_capacity, container_id=rack_id
         )
 
         assert n_tips <= rack.slot_capacity, f"{n_tips} {rack.slot_capacity}"
@@ -149,7 +149,7 @@ class JuniorRack(LabContainer, LabContainee, JuniorLabObject):
         """
 
         rack = JuniorRack.from_capacity(
-            can_contain=[JuniorVial.__name__, ], capacity=rack_capacity, container_id=rack_id
+            can_contain=[JuniorVial.rdf_type, ], capacity=rack_capacity, container_id=rack_id
         )
 
         assert n_vials <= rack.slot_capacity, f"{n_vials} {rack.slot_capacity}"

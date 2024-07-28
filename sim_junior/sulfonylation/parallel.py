@@ -135,14 +135,16 @@ def define_instructions():
 def simulate(name):
     define_instructions()
 
-    # dump as `drawio` editable
-    diagram = JUNIOR_LAB.instruction_graph
-    diagram.layout(algo="rt_circular")
-    diagram.dump_file(filename=f"{name}.drawio", folder="./")
+    # TODO fix this
+    # # dump as `drawio` editable
+    # diagram = JUNIOR_LAB.instruction_graph
+    # diagram.layout(algo="rt_circular")
+    # diagram.dump_file(filename=f"{name}.drawio", folder="./")
 
-    # dump as json
-    with open(f"{name}.json", "w") as f:
-        json.dump([v.as_dict(identifier_only=True) for v in JUNIOR_LAB.dict_instruction.values()], f, indent=2)
+    # TODO fix this
+    # # dump as json
+    # with open(f"{name}.json", "w") as f:
+    #     json.dump([v.as_dict(identifier_only=True) for v in JUNIOR_LAB.dict_instruction.values()], f, indent=2)
 
     env = simpy.Environment()
     Model(env, JUNIOR_LAB, wdir=os.path.abspath("./"), model_name=name)
@@ -153,3 +155,7 @@ if __name__ == '__main__':
     import os.path
 
     simulate(os.path.basename(__file__).rstrip(".py"))
+    g = KnowledgeGraph.graph()
+    g.serialize(destination="parallel.ttl", format="turtle")
+    print("ABox exported to parallel.ttl")
+

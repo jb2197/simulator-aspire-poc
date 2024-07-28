@@ -53,6 +53,10 @@ class ChemicalContainer(LabObject):
     def chemical_content(self) -> dict[str, float]:
         return {list(c.chemical_name)[0]: list(c.amount)[0] for c in self.has_chemical_content}
 
+    @chemical_content.setter
+    def chemical_content(self, content: dict[str, float]):
+        self.add_content(content)
+
     @property
     def content_sum(self) -> float:
         if len(self.chemical_content) == 0:

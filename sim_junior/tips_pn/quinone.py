@@ -132,9 +132,10 @@ def define_instructions():
 def simulate(name):
     define_instructions()
 
-    diagram = JUNIOR_LAB.instruction_graph
-    diagram.layout(algo="rt_circular")
-    diagram.dump_file(filename=f"{name}.drawio", folder="./")
+    # TODO fix this
+    # diagram = JUNIOR_LAB.instruction_graph
+    # diagram.layout(algo="rt_circular")
+    # diagram.dump_file(filename=f"{name}.drawio", folder="./")
     env = simpy.Environment()
     Model(env, JUNIOR_LAB, wdir=os.path.abspath("./"), model_name=name)
     env.run()
@@ -144,3 +145,6 @@ if __name__ == '__main__':
     import os.path
 
     simulate(os.path.basename(__file__).rstrip(".py"))
+    g = KnowledgeGraph.graph()
+    g.serialize(destination="quinone.ttl", format="turtle")
+    print("ABox exported to quinone.ttl")
