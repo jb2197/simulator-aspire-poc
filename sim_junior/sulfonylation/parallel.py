@@ -141,10 +141,9 @@ def simulate(name):
     # diagram.layout(algo="rt_circular")
     # diagram.dump_file(filename=f"{name}.drawio", folder="./")
 
-    # TODO fix this
-    # # dump as json
-    # with open(f"{name}.json", "w") as f:
-    #     json.dump([v.as_dict(identifier_only=True) for v in JUNIOR_LAB.dict_instruction.values()], f, indent=2)
+    # dump as json
+    with open(f"{name}.json", "w") as f:
+        json.dump([v.as_dict(identifier_only=True) for v in JUNIOR_LAB.dict_instruction.values()], f, indent=2)
 
     env = simpy.Environment()
     Model(env, JUNIOR_LAB, wdir=os.path.abspath("./"), model_name=name)

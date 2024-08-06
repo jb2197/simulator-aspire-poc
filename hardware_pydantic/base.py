@@ -190,7 +190,10 @@ class Instruction(Individual):
 
     def as_dict(self, identifier_only=True):
         if identifier_only:
-            d = self.model_dump()
+
+            # TODO this is a semi-magic from https://github.com/pydantic/pydantic/issues/4186
+            d = self.model_dump(mode="json")
+
             dict_action_parameters = dict()
             for k, v in self.action_parameters.items():
                 if isinstance(v, LabObject):
